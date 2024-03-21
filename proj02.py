@@ -51,7 +51,7 @@ def index():
     return render_template('index.html', timesheets=timesheets,total_hours=total_hours)
 
 
-@app.route('/add_timesheet', methods=['POST'])
+@app.route('/add_timesheet', methods=['POST','GET'])
 def add_timesheet():
     job_name = request.form['job_name']
     description = request.form['description']
@@ -111,7 +111,7 @@ def view_timesheets():
     c.execute("SELECT * FROM timesheets")  # 查询所有工时记录
     timesheets = c.fetchall()
     conn.close()
-    return render_template('view_timesheets.html', timesheets=timesheets, total_hours=total_hours)
+    return render_template('view.html', timesheets=timesheets, total_hours=total_hours)
 def save_to_csv(data):
     with open('timesheets.csv', mode='w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=['job_name', 'description','start_time', 'end_time'])
@@ -127,6 +127,16 @@ def get_timesheets():
     conn.close()
     # 将查询结果转换为字典列表并返回 JSON 格式数据
     return jsonify({'timesheets': [dict(timesheet) for timesheet in timesheets]})
+@app.route('/delete_timesheet/<int:timesheet_id>', methods=['POST'])
+def delete_timesheet(timesheet_id):
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("DELETE FROM timesheets WHERE id=?", (timesheet_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('index'))
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
